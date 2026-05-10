@@ -2,8 +2,27 @@ const express = require('express');
 const multer = require('multer');
 const session = require('express-session');
 const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
+
+// ✅ CLOUDINARY CONFIG
+cloudinary.config({
+    cloud_name: 'dvpnr89ht',
+    api_key: '971143368462461',
+    api_secret: 'GqdbnR7cBdpEww9xUyM5nms5u2s'
+});
+
+// ✅ MULTER + CLOUDINARY STORAGE
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'furniture',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp']
+    }
+});
+const upload = multer({ storage });
 
 // ✅ MONGODB CONNECT
 mongoose.connect('mongodb+srv://admin:furniture123@cluster0.wanfofg.mongodb.net/furnitureDB?appName=Cluster0')
@@ -19,22 +38,12 @@ const Item = mongoose.model('Item', itemSchema);
 
 // ✅ MIDDLEWARE
 app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
     secret: 'secret123',
     resave: false,
     saveUninitialized: true
 }));
-
-// ✅ MULTER SETUP
-const storage = multer.diskStorage({
-    destination: 'uploads/',
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + "-" + file.originalname);
-    }
-});
-const upload = multer({ storage });
 
 // ✅ ROUTES
 app.get('/', (req, res) => {
@@ -61,8 +70,8 @@ app.get('/admin.html', (req, res, next) => {
 // ✅ ADD ITEM
 app.post('/add', upload.single('image'), async(req, res) => {
     const imagePath = req.file ?
-        "/uploads/" + req.file.filename :
-        req.body.image;
+        req.file.path :
+        req.body.imageUrl;
 
     const newItem = new Item({
         name: req.body.name,
