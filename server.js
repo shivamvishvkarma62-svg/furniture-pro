@@ -1,22 +1,33 @@
 const express = require('express');
 const multer = require('multer');
 const session = require('express-session');
+const mongoose = require('mongoose');
 
 const app = express();
-let items = [];
+
+// ✅ MONGODB CONNECT
+mongoose.connect('mongodb+srv://admin:furniture123@cluster0.wanfofg.mongodb.net/furnitureDB?appName=Cluster0')
+    .then(() => console.log('MongoDB connected!'))
+    .catch(err => console.log('DB Error:', err));
+
+// ✅ SCHEMA
+const itemSchema = new mongoose.Schema({
+    name: String,
+    image: String
+});
+const Item = mongoose.model('Item', itemSchema);
 
 // ✅ MIDDLEWARE
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 app.use(express.urlencoded({ extended: true }));
-
 app.use(session({
     secret: 'secret123',
     resave: false,
     saveUninitialized: true
 }));
 
-// ✅ MULTER SETUP (MOVE THIS UP)
+// ✅ MULTER SETUP
 const storage = multer.diskStorage({
     destination: 'uploads/',
     filename: (req, file, cb) => {
@@ -47,36 +58,31 @@ app.get('/admin.html', (req, res, next) => {
     }
 });
 
-// ✅ DATABASE (TEMP)
-
-app.post('/add', upload.single('image'), (req, res) => {
+// ✅ ADD ITEM
+app.post('/add', upload.single('image'), async(req, res) => {
     const imagePath = req.file ?
         "/uploads/" + req.file.filename :
         req.body.image;
 
-    const newItem = {
-        id: Date.now(), // ✅ UNIQUE ID
+    const newItem = new Item({
         name: req.body.name,
         image: imagePath
-    };
+    });
 
-    items.push(newItem);
-
+    await newItem.save();
     res.redirect('/admin.html');
 });
 
 // ✅ GET ITEMS
-app.get('/items', (req, res) => {
+app.get('/items', async(req, res) => {
+    const items = await Item.find();
     res.json(items);
-}); // DELETE ITEM
-app.get('/delete/:id', (req, res) => {
+});
 
-    const id = parseInt(req.params.id); // get id from URL
-
-    // remove item with that id
-    items = items.filter(item => item.id !== id);
-
-    res.redirect('/admin.html'); // go back to admin page
+// ✅ DELETE ITEM
+app.get('/delete/:id', async(req, res) => {
+    await Item.findByIdAndDelete(req.params.id);
+    res.redirect('/admin.html');
 });
 
 // ✅ SERVER
