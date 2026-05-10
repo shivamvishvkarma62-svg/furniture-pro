@@ -1,121 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <title>Furniture</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             text-align: center;
             font-family: sans-serif;
+            background: #f9f5f0;
         }
         
-        .grid {
+        .header {
+            background: #2c1f17;
+            color: white;
+            padding: 15px;
+            font-size: 16px;
+        }
+        
+        h1 {
+            margin: 30px 0;
+            font-size: 32px;
+            color: #2c1f17;
+        }
+        
+        #items {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-        }
-        
-        img {
-            width: 200px;
-            height: 150px;
-            margin: 10px;
-        }
-        
-        button {
-            background: #2c1f17;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        button:hover {
-            background: #5a3d2b;
+            gap: 30px;
+            padding: 20px;
         }
         
         .card {
+            width: 220px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
             transition: 0.3s;
         }
         
         .card:hover {
             transform: scale(1.05);
         }
+        
+        .card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .card h3 {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #2c1f17;
+        }
+        
+        .whatsapp {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #25D366;
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            text-decoration: none;
+            font-size: 22px;
+        }
     </style>
 </head>
 
 <body>
-    <p>📞 Call: +91 7024893242
-        <br>+91 7898434769</p>
 
+    <div class="header">
+        📞 Call: +91 7024893242 &nbsp;|&nbsp; +91 7898434769
+    </div>
 
-    <h1 style="text-align:center;">Our Furniture</h1>
+    <h1>Our Furniture</h1>
 
-    <div id="items" style="
-display: flex;
-flex-wrap: wrap;
-justify-content: center;
-gap: 30px;
-padding: 20px;
-"></div>
+    <div id="items"></div>
 
+    <!-- ✅ SIRF EK SCRIPT — BUG FIX -->
     <script>
         fetch('/items')
             .then(res => res.json())
             .then(data => {
-                const div = document.getElementById('items');
+                const container = document.getElementById('items');
+                container.innerHTML = "";
 
-                // ✅ CLEAR OLD DATA FIRST
-                div.innerHTML = "";
+                if (data.length === 0) {
+                    container.innerHTML = "<p>Koi item nahi hai abhi.</p>";
+                    return;
+                }
 
                 data.forEach(item => {
-                    div.innerHTML += `
-            <div class="card">
-                <img src="${item.image}" onerror="this.src='https://via.placeholder.com/200'">
-                <h3>${item.name}</h3>
-            </div>
-            `;
+                    container.innerHTML += `
+                        <div class="card">
+                            <img src="${item.image}" onerror="this.src='https://via.placeholder.com/200'">
+                            <h3>${item.name}</h3>
+                        </div>`;
                 });
+            })
+            .catch(err => {
+                console.error("Items load nahi hue:", err);
             });
-    </script>
-    <script>
-        data.forEach(item => {
-        const div = document.createElement('div');
-        div.style.width = "250px";
-        div.style.border = "1px solid #ddd";
-        div.style.borderRadius = "10px";
-        div.style.padding = "10px";
-        div.style.textAlign = "center";
-        div.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)";
-        div.style.background = "#fff";
-        div.innerHTML = `
-    <img src="${item.image}" style="width:100%; height:180px; object-fit:cover; border-radius:10px;">
-    <h3 style="margin-top:10px;">${item.name}</h3>
-    `;
-        container.appendChild(div);
-        });
-        });
     </script>
 
-    <script>
-        fetch('/items')
-            .then(res => res.json())
-            .then(data => {
-                const div = document.getElementById('items');
-                data.forEach(item => {
-                    div.innerHTML += `
-    <div class="card">
-      <img src="${item.image}">
-      <h3>${item.name}</h3>
-    </div>`;
-                });
-            });
-    </script>
-    <a href="https://wa.me/917898434769" target="_blank" style="position:fixed;bottom:20px;right:20px;
-background:#25D366;color:white;padding:15px;
-border-radius:50%;text-decoration:none;font-size:20px;">
-💬
-</a>
+    <a href="https://wa.me/917898434769" target="_blank" class="whatsapp">💬</a>
+
 </body>
 
 </html>
