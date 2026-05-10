@@ -1,23 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
-<body style="text-align:center;font-family:sans-serif;">
+<head>
+    <title>Admin Panel</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: sans-serif;
+            background: #f9f5f0;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        h2 {
+            color: #2c1f17;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        form {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+        
+        input {
+            display: block;
+            width: 300px;
+            padding: 10px;
+            margin: 10px auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .add-btn {
+            background: #2c1f17;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .add-btn:hover {
+            background: #5a3d2b;
+        }
+        
+        h3 {
+            color: #2c1f17;
+            margin-bottom: 20px;
+        }
+        
+        #itemList {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            width: 200px;
+        }
+        
+        .card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .card p {
+            margin: 10px 0;
+            font-weight: bold;
+            color: #2c1f17;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        
+        .go-home {
+            display: inline-block;
+            margin-top: 30px;
+            color: #2c1f17;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
 
-    <h2>VISHWAKARMA FURNITURE</h2>
+<body>
 
+    <h2>VISHWAKARMA FURNITURE — Admin Panel</h2>
+
+    <!-- ADD FORM -->
     <form action="/add" method="POST" enctype="multipart/form-data">
-
-        <input type="text" name="name" placeholder="Enter furniture name" required><br><br>
-
-        <input type="text" name="image" placeholder="Paste Image URL"><br><br>
-
-        <input type="file" name="image"><br><br>
-
-        <button type="submit">Add</button>
-
+        <input type="text" name="name" placeholder="Furniture ka naam likho" required>
+        <input type="text" name="image" placeholder="Image URL paste karo (optional)">
+        <input type="file" name="image" accept="image/*">
+        <button type="submit" class="add-btn">➕ Add Furniture</button>
     </form>
 
-    <br><a href="/">Go to Website</a>
+    <!-- ITEMS LIST WITH DELETE -->
+    <h3>All Items</h3>
+    <div id="itemList"></div>
+
+    <a href="/" class="go-home">🏠 Website Dekho</a>
+
+    <script>
+        function loadItems() {
+            fetch('/items')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('itemList');
+                    list.innerHTML = "";
+
+                    if (data.length === 0) {
+                        list.innerHTML = "<p>Koi item nahi hai abhi.</p>";
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        list.innerHTML += `
+                            <div class="card">
+                                <img src="${item.image}" onerror="this.src='https://via.placeholder.com/200'">
+                                <p>${item.name}</p>
+                                <a href="/delete/${item.id}">
+                                    <button class="delete-btn">🗑️ Delete</button>
+                                </a>
+                            </div>`;
+                    });
+                });
+        }
+
+        loadItems();
+    </script>
 
 </body>
 
