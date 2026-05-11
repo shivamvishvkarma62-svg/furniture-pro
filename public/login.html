@@ -1,16 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
-<body style="text-align:center;margin-top:100px;font-family:sans-serif;">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: sans-serif;
+            background: #f9f5f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #2c1f17;
+            margin-bottom: 25px;
+        }
+        
+        input {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2c1f17;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #5a3d2b;
+        }
+        
+        .error {
+            color: red;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
 
-    <h2>Admin Login</h2>
+<body>
+    <div class="box">
+        <h2>🔐 Admin Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <p class="error" id="error"></p>
+    </div>
 
-    <form action="/login" method="POST">
-        <input name="username" placeholder="Username"><br><br>
-        <input type="password" name="password" placeholder="Password"><br><br>
-        <button>Login</button>
-    </form>
+    <script>
+        // Agar pehle se logged in hai
+        if (localStorage.getItem('token')) {
+            window.location.href = '/admin.html';
+        }
 
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username,
+                    password
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('token', data.token);
+                window.location.href = '/admin.html';
+            } else {
+                document.getElementById('error').textContent = data.message;
+            }
+        }
+    </script>
 </body>
 
 </html>

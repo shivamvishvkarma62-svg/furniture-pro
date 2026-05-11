@@ -1,11 +1,19 @@
 const express = require('express');
 const multer = require('multer');
-const session = require('express-session');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const app = express();
+const JWT_SECRET = 'furniture_secret_key_2026';
+
+// ✅ ADMIN CREDENTIALS (hashed)
+const ADMIN = {
+    username: 'admin',
+    password: bcrypt.hashSync('1234', 10)
+};
 
 // ✅ CLOUDINARY CONFIG
 cloudinary.config({
@@ -14,7 +22,7 @@ cloudinary.config({
     api_secret: 'GqdbnR7cBdpEww9xUyM5nms5u2s'
 });
 
-// ✅ MULTER + CLOUDINARY STORAGE
+// ✅ MULTER + CLOUDINARY
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -24,7 +32,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-// ✅ MONGODB CONNECT
+// ✅ MONGODB
 mongoose.connect('mongodb+srv://admin:furniture123@cluster0.wanfofg.mongodb.net/furnitureDB?appName=Cluster0')
     .then(() => console.log('MongoDB connected!'))
     .catch(err => console.log('DB Error:', err));
@@ -40,48 +48,58 @@ const Item = mongoose.model('Item', itemSchema);
 // ✅ MIDDLEWARE
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-    secret: 'secret123',
-    resave: false,
-    saveUninitialized: true
-}));
+app.use(express.json());
+
+// ✅ JWT MIDDLEWARE
+function verifyToken(req, res, next) {
+    const token = req.headers['authorization'] || req.query.token;
+    if (!token) return res.status(401).redirect('/login.html');
+    try {
+        jwt.verify(token, JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).redirect('/login.html');
+    }
+}
 
 // ✅ ROUTES
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+// ✅ LOGIN - JWT
 app.post('/login', (req, res) => {
-    if (req.body.username === "admin" && req.body.password === "1234") {
-        req.session.user = true;
-        res.redirect('/admin.html');
+    const { username, password } = req.body;
+    if (username === ADMIN.username && bcrypt.compareSync(password, ADMIN.password)) {
+        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '24h' });
+        res.json({ success: true, token });
     } else {
-        res.send("Wrong login");
+        res.json({ success: false, message: 'Wrong username or password!' });
     }
 });
 
-app.get('/admin.html', (req, res, next) => {
-    if (req.session.user) {
-        next();
-    } else {
-        res.redirect('/login.html');
-    }
+// ✅ ADMIN PAGE
+app.get('/admin.html', (req, res) => {
+    res.sendFile(__dirname + '/public/admin.html');
 });
 
 // ✅ ADD ITEM
 app.post('/add', upload.single('image'), async(req, res) => {
-    const imagePath = req.file ?
-        req.file.path :
-        req.body.imageUrl;
+    const token = req.query.token;
+    try {
+        jwt.verify(token, JWT_SECRET);
+    } catch {
+        return res.redirect('/login.html');
+    }
 
+    const imagePath = req.file ? req.file.path : req.body.imageUrl;
     const newItem = new Item({
         name: req.body.name,
         image: imagePath,
-        category: req.body.category // ✅ ADD KIYA
+        category: req.body.category
     });
-
     await newItem.save();
-    res.redirect('/admin.html');
+    res.redirect('/admin.html?token=' + token);
 });
 
 // ✅ GET ITEMS
@@ -92,11 +110,21 @@ app.get('/items', async(req, res) => {
 
 // ✅ DELETE ITEM
 app.get('/delete/:id', async(req, res) => {
+    const token = req.query.token;
+    try {
+        jwt.verify(token, JWT_SECRET);
+    } catch {
+        return res.redirect('/login.html');
+    }
     await Item.findByIdAndDelete(req.params.id);
-    res.redirect('/admin.html');
+    res.redirect('/admin.html?token=' + token);
 });
-// ✅ EDIT ITEM - GET (form dikhao)
+
+// ✅ EDIT ITEM GET
 app.get('/edit/:id', async(req, res) => {
+    const token = req.query.token;
+    try { jwt.verify(token, JWT_SECRET); } catch { return res.redirect('/login.html'); }
+
     const item = await Item.findById(req.params.id);
     res.send(`
         <!DOCTYPE html>
@@ -104,48 +132,53 @@ app.get('/edit/:id', async(req, res) => {
         <head>
             <title>Edit Item</title>
             <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: sans-serif; background: #f9f5f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-                .form-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; }
-                h2 { color: #2c1f17; margin-bottom: 20px; text-align: center; }
-                input { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-                img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin: 10px 0; }
-                .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; margin-top: 5px; }
-                .save { background: #2c1f17; color: white; }
-                .cancel { background: #eee; color: #333; text-decoration: none; display: block; text-align: center; margin-top: 10px; padding: 10px; border-radius: 5px; }
+                * { margin:0; padding:0; box-sizing:border-box; }
+                body { font-family:sans-serif; background:#f9f5f0; display:flex; justify-content:center; align-items:center; height:100vh; }
+                .box { background:white; padding:30px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); width:350px; }
+                h2 { color:#2c1f17; margin-bottom:20px; text-align:center; }
+                input, select { display:block; width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; }
+                img { width:100%; height:150px; object-fit:cover; border-radius:8px; margin:10px 0; }
+                .save { background:#2c1f17; color:white; width:100%; padding:10px; border:none; border-radius:5px; cursor:pointer; }
+                .cancel { display:block; text-align:center; margin-top:10px; color:#888; text-decoration:none; }
             </style>
         </head>
         <body>
-            <div class="form-box">
+            <div class="box">
                 <h2>✏️ Edit Item</h2>
-                <img src="${item.image}" onerror="this.src='https://via.placeholder.com/300'">
-                <form action="/edit/${item._id}" method="POST" enctype="multipart/form-data">
+                <img src="${item.image}">
+                <form action="/edit/${item._id}?token=${token}" method="POST" enctype="multipart/form-data">
                     <input type="text" name="name" value="${item.name}" required>
+                    <select name="category">
+                        <option ${item.category==='Sofa'?'selected':''}>Sofa</option>
+                        <option ${item.category==='Bed'?'selected':''}>Bed</option>
+                        <option ${item.category==='Table'?'selected':''}>Table</option>
+                        <option ${item.category==='Chair'?'selected':''}>Chair</option>
+                        <option ${item.category==='Wardrobe'?'selected':''}>Wardrobe</option>
+                        <option ${item.category==='Kitchen'?'selected':''}>Kitchen</option>
+                        <option ${item.category==='Other'?'selected':''}>Other</option>
+                    </select>
                     <input type="file" name="image" accept="image/*">
-                    <small style="color:#888">* Naya image select karo ya chhod do same rakhne ke liye</small>
-                    <button type="submit" class="btn save">💾 Save Changes</button>
+                    <button type="submit" class="save">💾 Save</button>
                 </form>
-                <a href="/admin.html" class="cancel">❌ Cancel</a>
+                <a href="/admin.html?token=${token}" class="cancel">❌ Cancel</a>
             </div>
         </body>
         </html>
     `);
 });
 
-// ✅ EDIT ITEM - POST (save karo)
+// ✅ EDIT ITEM POST
 app.post('/edit/:id', upload.single('image'), async(req, res) => {
-    const updateData = { name: req.body.name };
+    const token = req.query.token;
+    try { jwt.verify(token, JWT_SECRET); } catch { return res.redirect('/login.html'); }
 
-    if (req.file) {
-        updateData.image = req.file.path;
-    }
+    const updateData = { name: req.body.name, category: req.body.category };
+    if (req.file) updateData.image = req.file.path;
 
     await Item.findByIdAndUpdate(req.params.id, updateData);
-    res.redirect('/admin.html');
+    res.redirect('/admin.html?token=' + token);
 });
 
 // ✅ SERVER
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

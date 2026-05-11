@@ -136,6 +136,7 @@
 <body>
 
     <h2>VISHWAKARMA FURNITURE — Admin Panel</h2>
+    <button onclick="logout()" style="background:#e74c3c; color:white; border:none; padding:8px 20px; border-radius:5px; cursor:pointer; margin-bottom:20px;">🚪 Logout</button>
 
     <!-- ADD FORM -->
     <form action="/add" method="POST" enctype="multipart/form-data">
@@ -161,6 +162,16 @@
     <a href="/" class="go-home">🏠 Website Dekho</a>
 
     <script>
+        // JWT Check
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        // Logout button
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+
         function loadItems() {
             fetch('/items')
                 .then(res => res.json())
