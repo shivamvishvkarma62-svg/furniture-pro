@@ -93,6 +93,54 @@ app.get('/delete/:id', async(req, res) => {
     await Item.findByIdAndDelete(req.params.id);
     res.redirect('/admin.html');
 });
+// ✅ EDIT ITEM - GET (form dikhao)
+app.get('/edit/:id', async(req, res) => {
+    const item = await Item.findById(req.params.id);
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Edit Item</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: sans-serif; background: #f9f5f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                .form-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; }
+                h2 { color: #2c1f17; margin-bottom: 20px; text-align: center; }
+                input { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+                img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin: 10px 0; }
+                .btn { width: 100%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; margin-top: 5px; }
+                .save { background: #2c1f17; color: white; }
+                .cancel { background: #eee; color: #333; text-decoration: none; display: block; text-align: center; margin-top: 10px; padding: 10px; border-radius: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="form-box">
+                <h2>✏️ Edit Item</h2>
+                <img src="${item.image}" onerror="this.src='https://via.placeholder.com/300'">
+                <form action="/edit/${item._id}" method="POST" enctype="multipart/form-data">
+                    <input type="text" name="name" value="${item.name}" required>
+                    <input type="file" name="image" accept="image/*">
+                    <small style="color:#888">* Naya image select karo ya chhod do same rakhne ke liye</small>
+                    <button type="submit" class="btn save">💾 Save Changes</button>
+                </form>
+                <a href="/admin.html" class="cancel">❌ Cancel</a>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+// ✅ EDIT ITEM - POST (save karo)
+app.post('/edit/:id', upload.single('image'), async(req, res) => {
+    const updateData = { name: req.body.name };
+
+    if (req.file) {
+        updateData.image = req.file.path;
+    }
+
+    await Item.findByIdAndUpdate(req.params.id, updateData);
+    res.redirect('/admin.html');
+});
 
 // ✅ SERVER
 const PORT = process.env.PORT || 3000;

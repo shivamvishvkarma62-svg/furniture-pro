@@ -107,6 +107,22 @@
             background: #c0392b;
         }
         
+        .edit-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .edit-btn:hover {
+            background: #d68910;
+        }
+        
         .go-home {
             display: inline-block;
             margin-top: 30px;
@@ -153,9 +169,12 @@
                             <div class="card">
                                 <img src="${item.image}" onerror="this.src='https://via.placeholder.com/200'">
                                 <p>${item.name}</p>
-                                <a href="/delete/${item._id}">
-                                    <button class="delete-btn">🗑️ Delete</button>
-                                </a>
+                                <a href="/edit/${item._id}">
+    <button class="edit-btn">✏️ Edit</button>
+</a>
+<a href="/delete/${item._id}">
+    <button class="delete-btn">🗑️ Delete</button>
+</a>
                             </div>`;
                     });
                 });
