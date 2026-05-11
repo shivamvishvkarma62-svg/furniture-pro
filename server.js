@@ -32,7 +32,8 @@ mongoose.connect('mongodb+srv://admin:furniture123@cluster0.wanfofg.mongodb.net/
 // ✅ SCHEMA
 const itemSchema = new mongoose.Schema({
     name: String,
-    image: String
+    image: String,
+    category: { type: String, default: 'Other' }
 });
 const Item = mongoose.model('Item', itemSchema);
 
@@ -75,7 +76,8 @@ app.post('/add', upload.single('image'), async(req, res) => {
 
     const newItem = new Item({
         name: req.body.name,
-        image: imagePath
+        image: imagePath,
+        category: req.body.category // ✅ ADD KIYA
     });
 
     await newItem.save();

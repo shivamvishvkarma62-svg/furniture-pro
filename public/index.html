@@ -176,6 +176,23 @@
                 gap: 15px;
             }
         }
+        
+        .filter-btn {
+            background: white;
+            color: #2c1f17;
+            border: 2px solid #2c1f17;
+            padding: 8px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #2c1f17;
+            color: white;
+        }
     </style>
 </head>
 
@@ -195,6 +212,16 @@
 
     <!-- SEARCH -->
     <div class="search-bar">
+        <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; padding:15px 20px;">
+            <button class="filter-btn active" onclick="filterCategory('all')">🏠 Sab</button>
+            <button class="filter-btn" onclick="filterCategory('Sofa')">🛋️ Sofa</button>
+            <button class="filter-btn" onclick="filterCategory('Bed')">🛏️ Bed</button>
+            <button class="filter-btn" onclick="filterCategory('Table')">🪑 Table</button>
+            <button class="filter-btn" onclick="filterCategory('Chair')">💺 Chair</button>
+            <button class="filter-btn" onclick="filterCategory('Wardrobe')">🚪 Wardrobe</button>
+            <button class="filter-btn" onclick="filterCategory('Kitchen')">🍳 Kitchen</button>
+            <button class="filter-btn" onclick="filterCategory('Other')">📦 Other</button>
+        </div>
         <input type="text" id="searchInput" placeholder="🔍 Furniture dhundho..." onkeyup="filterItems()">
     </div>
 
@@ -248,6 +275,34 @@
             const filtered = allItems.filter(item =>
                 item.name.toLowerCase().includes(query)
             );
+            renderItems(filtered);
+        }
+        let activeCategory = 'all';
+
+        function filterCategory(category) {
+            activeCategory = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            let filtered = allItems;
+            if (category !== 'all') {
+                filtered = allItems.filter(item => item.category === category);
+            }
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (query) {
+                filtered = filtered.filter(item => item.name.toLowerCase().includes(query));
+            }
+            renderItems(filtered);
+        }
+
+        function filterItems() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = allItems;
+            if (activeCategory !== 'all') {
+                filtered = filtered.filter(item => item.category === activeCategory);
+            }
+            filtered = filtered.filter(item => item.name.toLowerCase().includes(query));
             renderItems(filtered);
         }
     </script>

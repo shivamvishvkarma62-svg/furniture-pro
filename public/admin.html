@@ -140,6 +140,15 @@
     <!-- ADD FORM -->
     <form action="/add" method="POST" enctype="multipart/form-data">
         <input type="text" name="name" placeholder="Furniture ka naam likho" required>
+        <select name="category" style="display:block; width:300px; padding:10px; margin:10px auto; border:1px solid #ccc; border-radius:5px; font-size:14px;">
+    <option value="Sofa">🛋️ Sofa</option>
+    <option value="Bed">🛏️ Bed</option>
+    <option value="Table">🪑 Table</option>
+    <option value="Chair">💺 Chair</option>
+    <option value="Wardrobe">🚪 Wardrobe</option>
+    <option value="Kitchen">🍳 Kitchen</option>
+    <option value="Other">📦 Other</option>
+</select>
         <input type="text" name="image" placeholder="Image URL paste karo (optional)">
         <input type="file" name="image" accept="image/*">
         <button type="submit" class="add-btn">➕ Add Furniture</button>
